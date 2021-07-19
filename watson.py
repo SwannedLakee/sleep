@@ -34,54 +34,31 @@ def setup_argument_list():
 
 # Summary ######################################################################
 
-def output_sessions_as_projects(sessions):
-        total_time = sum([entry.length()
-                          for entry in sessions], datetime.timedelta())
-        projects = list(set([entry.project for entry in sessions]))
-        for project in projects:
-                projectreport(project, sessions, args.verbatim)
-        print "Total project time".ljust(45)+str(total_time)
-        return total_time
-
-def output_sessions_as_account(sessions):
-        total_time = sum([entry.length()
-                          for entry in sessions], datetime.timedelta())
-        projects = {}
-        for session in sessions:
-            if session.project in projects:
-               projects[session.project]+=session.length()
-            else:
-               projects[session.project]=session.length()
-
-        for key, value in sorted(projects.iteritems(), key=lambda (k,v): (v,k)):
-            print "%s: %s" % (value, key)
 
 
-        print "Total project time".ljust(45)+str(total_time)
-        return total_time
-
-def projectreport(name, sessions, verbose):
-        project_sessions = [ entry for entry in sessions if ( entry.project == name)]
-        total_time = sum([entry.length() for entry in project_sessions], datetime.timedelta())
-        if verbose:
-                print "#### {}\n\nTotal Time on this project: {}\n".format(name.strip().ljust(65), str(total_time)[:-3])
-                for entry in project_sessions:
-                        print entry
+def median(l):
+# from https://stackoverflow.com/questions/24101524/finding-median-of-list-in-python
+        l.sort()
+        lent = len(l)
+        if (lent%2)==0:
+            m = int(lent/2)
+            result = l[m]
         else:
-                print "{}: {}".format(name.strip().ljust(45), total_time)
-        return total_time
+            m = int(float(lent/2) -0.5)
+            result = l[m]
+        return ('median is: {}'.format(result))
 
 def sleep_report(project_sessions):
         for entry in project_sessions:
-                        print entry
+            print entry
         total_time = sum([entry.length() for entry in project_sessions], datetime.timedelta())
         average_time = avg_time([entry.length() for entry in project_sessions])
         wake_list = [str(entry.end)[11:] for entry in project_sessions]
-#        print wake_list
-#        print  mean_time(wake_list)
         st_dev_length = st_dev([entry.length() for entry in project_sessions])
-#        print wake_time
-        print "\n\nTotal Sleep Time: {}".format(str(total_time)[:-3])
+        med = median([entry.length() for entry in project_sessions])
+#TODO make these pretty 
+        print "\nTotal Sleep Time: {}".format(str(total_time)[:-3])
+        print "Medien Sleep Time: {}".format(str(med)) 
         print "Average Sleep Time: {}".format(str(average_time))
         print "Average Wake Time: {}".format(mean_time(wake_list))
         print "ST-dev for average: {}".format(str(st_dev_length))
@@ -93,8 +70,6 @@ from math import radians, degrees
 
 def mean_angle(deg):
     return degrees(phase(sum(rect(1, radians(d)) for d in deg)/len(deg)))
-
-
 
 def mean_time(times):
     t = (time.split(':') for time in times)
@@ -131,10 +106,6 @@ def days_old(session):
         delta = datetime.datetime.now() - session.start.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
 	return delta.days
 
-
-
-
-########## Processing ##########
 def get_sessions(atoms):
 #This has two phases
         if len(atoms)==0:
@@ -252,59 +223,6 @@ def invert_sessions(sessions):
 ########## Input ##########
 
 
-def log_file_to_atoms(filename, title=None):
-    if title==None:
-	title=filename
-    content=icalhelper.get_content(filename)
-    if "title" in content[0]:
-        title=content[0][7:].strip()
-    entries="\n".join(content).split("######")
-    atoms=[]
-    lastdate="01/01/10"
-    date=""
-    entries=entries[1:]
-    for e in entries:
-        atom=Atom()
-        lines=e.split("\n",1)
-  #      atom.content="\n".join(lines[1:]).strip()+"\n"
-        atom.content=lines[1]
-        atom.title=title
-        datetitle= e.split("\n")[0]
-        date= datetitle.split(",")[0]
-        if(len( datetitle.split(","))>1):
-            postitle= datetitle.split(",")[1]
-            if len(postitle)>2:
-                atom.title=postitle
-        date=date.replace("2016-","16 ")
-        date=date.replace("2017-","17 ")
-        date=re.sub(r":[0-9][0-9] GMT","",date)
-        date=re.sub(r":[0-9][0-9] BST","",date)
-        date=re.sub(r"to [0-9][0-9]/../..","to",date)
-        if date.find("/")>0: #Then we have both date and time.
-            newdate=date[:9].strip()
-            atom.start=date[9:9+15].strip()
-            atom.date=newdate
-            lastdate=newdate
-        else:
-            atom.start=date.strip()
-            atom.date=lastdate
-        if "to" in atom.start:
-            #Then it was a 'to' construct and has a start and end time
-            atom.end = atom.start[9:]
-            atom.start = atom.start[:5]
-        else:
-            atom.end=atom.start
-        atom.start=atom.start[:5]
-        atom.end=atom.end[:5]
-        atoms.append(atom)
-
-    return atoms
-
-
-
-
-
-
 
 def heartrate_to_atoms(filename):
     #01-May-2017 23:46,01-May-2017 23:46,69.0
@@ -325,47 +243,8 @@ def heartrate_to_atoms(filename):
     atoms.pop(0)
     return atoms
 
-def desktop_tracking_file_to_atoms(filename,tag="mail"):
-    content=icalhelper.get_content(filename)
-    matchingcontent= [line for line in content if (tag in line )]
-    TF = "%d/%m/%y %H:%M"
-
-    atoms=[]
-    for line in matchingcontent:
-        content=line[19:]
-        start=line[11:16]
-        end=line[11:16]
-        date=line[8:10]+"/"+line[5:7]+"/"+line[2:4]
-        atoms.append(Atom(start,end,date,"mail",content,TF))
-    return atoms
 
 
-def commandline_file_to_atoms(filename):
-    filecontent=icalhelper.get_content(filename)
-    TF = "%d/%m/%y %H:%M"
-
-    atoms=[]
-    for line in filecontent:
-        content=line[25:].strip()
-        start=line[16:21]
-        end=line[16:21]
-        date=line[7:9]+"/"+line[10:12]+"/"+line[13:15]
-        atoms.append(Atom(start,end,date,"Command line","    "+ content,TF))
-    return atoms
-
-    pass
-
-
-def camera_uploads_to_atoms(targetdir=r"/Users/josephreddington/Dropbox/Camera Uploads/"):
-    TF = "%d/%m/%y %H:%M"
-    import os.path, time
-    atoms=[]
-    for file in glob.glob(targetdir+"*"):
-        modified_date= datetime.datetime.fromtimestamp(os.path.getmtime(file))
-        #content = "\n![Imported Image]({})\n".format(file.replace(" ","\ "))
-        content = '\n\n<img alt="Imported Image" src="{}" height=160/></p>\n\n'.format(file)
-        atoms.append(Atom(modified_date.strftime("%H:%M"),modified_date.strftime("%H:%M"),modified_date.strftime("%d/%m/%y"),"Image",content,TF))
-    return sorted(atoms,key=lambda x: x.get_S(), reverse=False)
 
 
 
@@ -378,12 +257,6 @@ def calendar_output(filename,sessions, matchString=None):
             if (matchString==None) or (matchString==entry.project):
                 icalhelper.add_event(cal, entry.project, entry.start, entry.end)
         icalhelper.write_cal(filename,cal)
-
-
-def print_original(atoms):
-    for atom in atoms:
-        print "###### "+atom.date+ " "+ atom.start+ " to "+atom.end
-        print "{}".format(atom.content)
 
 
 def atoms_to_text(atoms):
@@ -405,70 +278,12 @@ def atoms_to_text(atoms):
     return returntext
 
 
-# Driver files.
-
-
-
-def pink_slime(config_file='/config.json'):
-  #  print "Hello"
-    cwd=os.path.dirname(os.path.abspath(__file__))
-    atoms=[]
-    atoms.extend(log_file_to_atoms("/Users/josephreddington/Dropbox/git/flow/gromit/journal_2018-01-01.md"))
-    atoms.extend(commandline_file_to_atoms(cwd+'/testinputs/commandline.txt'))
-    atoms.extend(camera_uploads_to_atoms())
-    atoms=cut(atoms,"01-Jan-2018 00:00","01-Jan-2018 23:59")
-    temp=sorted(atoms,key=lambda x: x.get_S(), reverse=False)
-    sessions=get_sessions(temp)
-
-def full_detect(config_file='/config.json'):
-    cwd=os.path.dirname(os.path.abspath(__file__))
-    config = json.loads(open(cwd+config_file).read())
-    vision_dir = config["projects"]
-    gromit_dir = config["journals"]
-
-    if args.action == "now":
-	print datetime.datetime.now(pytz.timezone("Europe/London")).strftime("###### "+__TIME_FORMAT)
-	return
-    sessions=[]
-    pacesetter_sessions=get_sessions(log_file_to_atoms(config["pacesetter"]))
-    email_sessions=get_sessions(desktop_tracking_file_to_atoms(config["desktop"]))
-    watch_atoms=heartrate_to_atoms(config['heart'])
-    exercise_sessions=make_exercise_file(args,watch_atoms)
+def full_detect():
+    watch_atoms=heartrate_to_atoms("/Users/joereddingtonfileless/git/Heart Rate.csv")
     sleep_sessions=make_sleep_file(args,watch_atoms)
-    delores_sessions=get_sessions(log_file_to_atoms(config["delores"]))
-    projects_sessions=make_projects_file(vision_dir, "projects")
-    gromit_sessions=make_projects_file(gromit_dir, "Journals")
-    timechart.graph_out(email_sessions,"email")
-#    timechart.graph_out(pacesetter_sessions,"Pacesetter")
-    timechart.graph_out(delores_sessions,"DELORES")
-    timechart.graph_out(gromit_sessions,"journals")
-
-    sessions.extend(pacesetter_sessions)
-    sessions.extend(delores_sessions)
-    sessions.extend(email_sessions)
-    sessions.extend(exercise_sessions)
-    sessions.extend(projects_sessions)
-    sessions.extend(gromit_sessions)
 
     if args.d:
-            sessions = [i for i in sessions if days_old(i)<int(args.d)]
             sleep_sessions = [i for i in sleep_sessions if days_old(i)<int(args.d)]
-
-
-    time =0
-    if args.action == "sleep":
-        time= sleep_report(sleep_sessions)
-    if args.action == "sort":
-       time=  output_sessions_as_projects(sessions)
-
-    if args.action == "account":
-        time=output_sessions_as_account(sessions)
-
-#    calendar_output(cwd+"/calendars/pacesetter.ics",pacesetter_sessions)
-    calendar_output(cwd+"/calendars/email.ics",email_sessions)
-    calendar_output(cwd+"/calendars/projects.ics",projects_sessions)
-    calendar_output(cwd+"/calendars/Exercise.ics",exercise_sessions)
+    sleep_report(sleep_sessions)
     calendar_output(cwd+"/calendars/Sleep.ics",sleep_sessions)
-    calendar_output(cwd+"/calendars/gromit.ics",gromit_sessions)
-    return time
 
