@@ -1,13 +1,13 @@
 from unittest import TestCase
 import unittest
 import watson
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import json
 import os
 import atom
 import session
 import datetime
-from urllib2 import urlopen, Request
+from urllib.request import urlopen, Request
 
 
 class watsonTest(TestCase):

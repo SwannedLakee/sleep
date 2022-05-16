@@ -24,7 +24,7 @@ def getCal():
 
 
 def write_cal(outfilename, cal):
-	print "Writing calendar"
+	print("Writing calendar")
         f = open(outfilename, 'wb')
         f.write(cal.to_ical())
         f.close()
@@ -65,14 +65,14 @@ def processOyster(content):
 def process_hours(tag, content):
         __TIME_FORMAT = "%d/%m/%y %H:%M"
         cal = getCal()
-	print "Tag:"+tag
+	print("Tag:"+tag)
         for x in content:
                 if "Clocked" in x:
                         pass
                 else:
                         if tag in x:
 			    if any(year in x for year in ['17','16','18']):
-				print "XX:"+x
+				print("XX:"+x)
                                 journey = x.split(',')
                                 #print datetime.date.today().strftime(__TIME_FORMAT)
                                 #print x
@@ -80,10 +80,10 @@ def process_hours(tag, content):
                                         journey[1].replace('"', ''), __TIME_FORMAT)
                                 endtime = datetime.datetime.strptime(
                                         journey[2].replace('"', ''), __TIME_FORMAT)
-                                print "{} {} {}".format(tag, journeytime, endtime)
+                                print("{} {} {}".format(tag, journeytime, endtime))
                                 addEvent( cal, tag, journeytime, endtime)
-				print "event added"+x
-	print "returning with calendar"
+				print("event added"+x)
+	print("returning with calendar")
         return cal
 
 
@@ -98,8 +98,8 @@ def process_email(content):
                 day_bucket.setdefault(
                     thing[0], []).append(
                     (thing[1], thing[2]))
-        for key in day_bucket.keys():
-                print "{}  {} {}".format(key, day_bucket[key][0][0], day_bucket[key][-1][0])
+        for key in list(day_bucket.keys()):
+                print("{}  {} {}".format(key, day_bucket[key][0][0], day_bucket[key][-1][0]))
                 journeytime = datetime.datetime.strptime(
                         key+day_bucket[key][0][0], __TIME_FORMAT)
                 endtime = datetime.datetime.strptime(

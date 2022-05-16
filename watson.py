@@ -9,25 +9,12 @@ __TIME_FORMAT = "%d/%m/%y %H:%M"
 max_dist_between_logs = 15  # in minutes TODO these should be arguments for different types of input.
 min_session_size = 15  # in minutes
 
-def median(l):
-# from https://stackoverflow.com/questions/24101524/finding-median-of-list-in-python
-        l.sort()
-        lent = len(l)
-        if (lent%2)==0:
-            m = int(lent/2)
-            result = l[m]
-        else:
-            m = int(float(lent/2) -0.5)
-            result = l[m]
-        return result
 
 def sleep_report(project_sessions):
         wake_list = [str(session.end)[11:] for session in project_sessions]
         length_list=[session.length() for session in project_sessions]
         #TODO make these pretty 
-        print "Median Sleep Time: {}".format(median(length_list)) 
-        print "Mean Sleep Time: {}".format(avg_time(length_list))
-        print "Median Wake Time: {}".format(median(wake_list)) 
+        print(("Mean Sleep Time: {}".format(avg_time(length_list))))
 
 def avg_time(datetimes):
     total = sum(dt.total_seconds() for dt in datetimes)
@@ -36,8 +23,8 @@ def avg_time(datetimes):
 
 
 def days_old(session):
-        delta = datetime.datetime.now() - session.start.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
-	return delta.days
+    delta = datetime.datetime.now() - session.start.replace(hour = 0, minute = 0, second = 0, microsecond = 0)
+    return delta.days
 
 def get_sessions(atoms):
 #This has two phases
@@ -60,7 +47,7 @@ def get_sessions(atoms):
                 elif (current.title != lasttitle): #preventing negative times being approved...
                     grouped_timevalues.append(current_group)
                     current_group=[current]
-		last = current.get_E()
+                last = current.get_E()
                 lasttitle=current.title
                 current_group.append(current)
         grouped_timevalues.append(current_group)
@@ -124,12 +111,12 @@ def heartrate_to_atoms(filename):
     return atoms
 
 def full_detect():
-    watch_atoms=heartrate_to_atoms("/Users/joereddingtonfileless/git/Heart Rate.csv")
+    watch_atoms=heartrate_to_atoms("/Volumes/Crucial X8/git/sleep/Heart Rate.csv")
     sleep_sessions=make_sleep_file(watch_atoms)
     for session in sleep_sessions:
-        print session
-    print "## All time"
+        print(session)
+    print("## All time")
     sleep_report(sleep_sessions)
     this_week = [i for i in sleep_sessions if days_old(i)<7]
-    print "## Last 7 Days" 
+    print("## Last 7 Days") 
     sleep_report(this_week)

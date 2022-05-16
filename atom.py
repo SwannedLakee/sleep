@@ -30,11 +30,11 @@ def fastStrptime(val, format):
             )
             return temp
         # Default to the native strptime for other formats.
-        print "Warning: falling through {} {} {}".format(val, format, l)
+        print("Warning: falling through {} {} {}".format(val, format, l))
         return datetime.datetime.strptime(val, format)
     except ValueError:
-        print "Exception for this:"
-        print val
+        print("Exception for this:")
+        print(val)
         raise ValueError
 
 class Atom(object):
@@ -56,8 +56,8 @@ class Atom(object):
                 self.s= fastStrptime(total_date,self.TF)
             return self.s
           except ValueError:
-            print "Exception:"
-            print self
+            print("Exception:")
+            print(self)
 
         def get_E(self):
           try:
@@ -72,8 +72,8 @@ class Atom(object):
             #print self.e
             return self.e
           except ValueError:
-            print "Exception in E:"
-            print self
+            print("Exception in E:")
+            print(self)
 
         def __str__(self):
             return "{}, from {} to {} on {}".format(self.title,self.start,self.end,self.date)
