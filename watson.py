@@ -1,5 +1,8 @@
 #!/usr/bin/python
 import math
+import datetime
+import statistics
+import warnings
 import calendar_helper_functions as icalhelper
 import datetime
 from session import Session
@@ -16,7 +19,13 @@ def sleep_report(project_sessions):
         #TODO make these pretty 
         print(("Mean Sleep Time: {}".format(avg_time(length_list))))
 
+
+
+
 def avg_time(datetimes):
+    if not datetimes:
+        warnings.warn("Empty list of datetimes passed to avg_time()")
+        return datetime.timedelta()
     total = sum(dt.total_seconds() for dt in datetimes)
     avg = total / len(datetimes)
     return datetime.timedelta(seconds=avg);
