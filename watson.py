@@ -14,21 +14,54 @@ min_session_size = 15  # in minutes
 
 
 def sleep_report(project_sessions):
-        wake_list = [str(session.end)[11:] for session in project_sessions]
+        wake_list = [session.end for session in project_sessions]
         length_list=[session.length() for session in project_sessions]
-        #TODO make these pretty 
-        print(("Mean Sleep Time: {}".format(avg_time(length_list))))
+        bed_list=[session.start for session in project_sessions]
+        print(("Mean Sleep Length: {}".format(avg_length(length_list))))
+        print(("Mean Bed Time: {}".format(avg_bed_time(bed_list))))
+        print(("Mean Wake Time: {}".format(avg_wake_time(wake_list))))
+
+
+def avg_bed_time(datetimes):
+    total = datetime.timedelta()
+    count = 0
+    for dt in datetimes:
+        if dt.time() >= datetime.time(20):
+            total += datetime.timedelta(hours=dt.hour, minutes=dt.minute, seconds=dt.second, microseconds=dt.microsecond)
+            count += 1
+    if count == 0:
+        return None
+    avg_seconds = round(total.total_seconds() / count)
+    avg_time = datetime.datetime.min + datetime.timedelta(seconds=avg_seconds)
+    return avg_time.time()
+
+
+def avg_wake_time(datetimes):
+    total = datetime.timedelta()
+    count = 0
+    for dt in datetimes:
+        if dt.time() <= datetime.time(8):
+            total += datetime.timedelta(hours=dt.hour, minutes=dt.minute, seconds=dt.second, microseconds=dt.microsecond)
+            count += 1
+    if count == 0:
+        return None
+    avg_seconds = round(total.total_seconds() / count)
+    avg_time = datetime.datetime.min + datetime.timedelta(seconds=avg_seconds)
+    return avg_time.time()
 
 
 
 
-def avg_time(datetimes):
-    if not datetimes:
-        warnings.warn("Empty list of datetimes passed to avg_time()")
-        return datetime.timedelta()
-    total = sum(dt.total_seconds() for dt in datetimes)
-    avg = total / len(datetimes)
-    return datetime.timedelta(seconds=avg);
+
+
+def avg_length(time_deltas):
+    IGNORE_DURATION = datetime.timedelta(hours=10) #Sleep longer than this is a tracking error 
+    filtered_time_deltas = [td for td in time_deltas if td < IGNORE_DURATION]
+    seconds = round(statistics.mean(td.total_seconds() for td in filtered_time_deltas))
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
 
 
 def days_old(session):
@@ -105,6 +138,7 @@ def invert_sessions(sessions):
     return new_sessions
 
 def heartrate_to_atoms(filename):
+    #Incoming data is in this format: 
     #01-May-2017 23:46,01-May-2017 23:46,69.0
     TF = "%d-%b-%Y %H:%M"
     timestamplength=len("01-May-2017 23:46")
@@ -124,8 +158,18 @@ def full_detect():
     sleep_sessions=make_sleep_file(watch_atoms)
     for session in sleep_sessions:
         print(session)
-    print("## All time")
-    sleep_report(sleep_sessions)
-    this_week = [i for i in sleep_sessions if days_old(i)<7]
-    print("## Last 7 Days") 
-    sleep_report(this_week)
+    segment_report(sleep_sessions,0)
+    segment_report(sleep_sessions,365)
+    segment_report(sleep_sessions,30)
+    segment_report(sleep_sessions,7)
+
+def segment_report(sleep_sessions,days=0):
+    sessions=[]
+    if days==0:
+        sessions=sleep_sessions
+        days="all"
+    else:
+        sessions = [i for i in sleep_sessions if days_old(i)<days]
+    print("## Last {} Days".format(days)) 
+    sleep_report(sessions)
+
