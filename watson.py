@@ -160,6 +160,7 @@ def full_detect():
         print(session)
     segment_report(sleep_sessions,0)
     segment_report(sleep_sessions,365)
+    segment_report(sleep_sessions,60)
     segment_report(sleep_sessions,30)
     segment_report(sleep_sessions,7)
 
