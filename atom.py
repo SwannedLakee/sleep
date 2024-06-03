@@ -3,6 +3,7 @@ m = { 'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr':4, 'May':5, 'Jun':6, 'Jul':7, 'Aug':8,
 
 
 def fastStrptime(val, format):
+    #print("enter fast strptime {}".format(val)) 
 # edited from http://ze.phyr.us/faster-strptime/
     try:
         l = len(val)
@@ -30,16 +31,17 @@ def fastStrptime(val, format):
             )
             return temp
         # Default to the native strptime for other formats.
-        print("Warning: falling through {} {} {}".format(val, format, l))
+    #    print("Warning: falling through {}|{}|{}".format(val, format, l))
         return datetime.datetime.strptime(val, format)
     except ValueError:
         print("Exception for this:")
         print(val)
+        print(format)
         raise ValueError
 
 class Atom(object):
 
-        def __init__(self, start="",end="", date="",title="", content="", TF="%d/%m/%y %H:%M"):
+        def __init__(self, start="",end="", date="",title="", content="", TF="%Y-%m-%d %H:%M"):
             self.content=content
             self.start=start
             self.title=title
@@ -62,6 +64,7 @@ class Atom(object):
         def get_E(self):
           try:
             total_date=self.date+" "+self.end
+          #  print("get_E: Total date={}".format(total_date))
             if not self.e:
                 self.e= fastStrptime(total_date,self.TF)
 		

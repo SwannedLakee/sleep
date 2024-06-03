@@ -20,7 +20,8 @@ class Session:
         return (self.end - self.start)
 
     def __str__(self) -> str:
-        return f"    {self.start.strftime('%a %d/%m/%y %H:%M')} to {self.end.strftime('%H:%M')} ({str(self.length())[:-3]})"
+        #return f"    {self.start.strftime('%a %d/%m/%y %H:%M')} to {self.end.strftime('%H:%M')} ({str(self.length())[:-3]})"
+        return f"    {self.start.strftime('%a, %d/%m/%y, %H:%M')}, {self.end.strftime('%H:%M')},  {str(self.length())[:-3]}"
 
     @property
     def start(self) -> datetime.datetime:

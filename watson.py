@@ -8,7 +8,7 @@ import datetime
 from session import Session
 from atom import Atom
 
-__TIME_FORMAT = "%d/%m/%y %H:%M"
+__TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 max_dist_between_logs = 15  # in minutes TODO these should be arguments for different types of input.
 min_session_size = 15  # in minutes
 
@@ -72,7 +72,7 @@ def get_sessions(atoms):
 #This has two phases
         if len(atoms)==0:
             return []
-        last= datetime.datetime.strptime( "11/07/10 10:00", __TIME_FORMAT)
+        last= datetime.datetime.strptime( "2011-07-10 10:00:00", __TIME_FORMAT)
         lasttitle=atoms[0].title
         current = atoms[0].get_S()
         grouped_timevalues=[]
@@ -80,6 +80,9 @@ def get_sessions(atoms):
     #Step1: group all atoms into the largest groups such that every start time but one is within 15 minutes of an end time of another
     #Oh- that's NOT*actually* what this does...this does 'within 15 minutes of the *last*'
         for current in atoms:
+                #print("enter loop") 
+                #print(current.get_S())
+                #print(last)
                 if ((current.get_S()-last) > datetime.timedelta( minutes=max_dist_between_logs)):
                     grouped_timevalues.append(current_group)
                     current_group=[current]
@@ -122,7 +125,6 @@ def make_sleep_file(atoms):
      pre2=min_session_size
      min_session_size = 60  # in minutes
      max_dist_between_logs=240
-
      sessions=get_sessions(atoms)
      sessions=invert_sessions(sessions)
      max_dist_between_logs=pre
@@ -139,25 +141,36 @@ def invert_sessions(sessions):
 
 def heartrate_to_atoms(filename):
     #Incoming data is in this format: 
-    #01-May-2017 23:46,01-May-2017 23:46,69.0
-    TF = "%d-%b-%Y %H:%M"
-    timestamplength=len("01-May-2017 23:46")
-    datelength=len("01-May-2017")
+    # 2024-04-12 06:38:29,88.000
+    timestamplength=len("2024-04-12 06:38:29")
+    datelength=len("2024-04-12")
     content=icalhelper.get_content(filename)
     atoms=[]
     for a in content:
         start=a[datelength+1:timestamplength]
         date=a[:datelength]
-        end=a[timestamplength+1+datelength+1:(timestamplength*2)+1]
-        atoms.append(Atom(start,end,date,"Sleep","Alive",TF))#labeling it sleep is wrong, but it keep the same name for the inversion.
+        end=a[datelength+1:timestamplength]
+       # print("{}, {}, {}".format(start,date,end))
+        atoms.append(Atom(start,end,date,"Sleep","Alive",__TIME_FORMAT))#labeling it sleep is wrong, but it keep the same name for the inversion.
     atoms.pop(0)
     return atoms
 
 def full_detect():
-    watch_atoms=heartrate_to_atoms("/Volumes/Crucial X8/git/sleep/Heart Rate.csv")
+    watch_atoms=heartrate_to_atoms("/Users/ppac065/Downloads/Export6.csv")
+    print("All atoms created") 
     sleep_sessions=make_sleep_file(watch_atoms)
     for session in sleep_sessions:
         print(session)
+    start_date = datetime.datetime.strptime("20-05-2024", "%d-%m-%Y")
+
+    # Get the current date
+    current_date = datetime.datetime.now()
+
+    # Calculate the difference in days
+    days_difference = (current_date - start_date).days
+
+
+    segment_report(sleep_sessions,days_difference)
     segment_report(sleep_sessions,0)
     segment_report(sleep_sessions,365)
     segment_report(sleep_sessions,60)
