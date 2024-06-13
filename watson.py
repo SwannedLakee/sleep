@@ -156,7 +156,7 @@ def heartrate_to_atoms(filename):
     return atoms
 
 def full_detect():
-    watch_atoms=heartrate_to_atoms("/Users/ppac065/Downloads/Export6.csv")
+    watch_atoms=heartrate_to_atoms("/Users/ppac065/Downloads/Export.csv")
     print("All atoms created") 
     sleep_sessions=make_sleep_file(watch_atoms)
     for session in sleep_sessions:
