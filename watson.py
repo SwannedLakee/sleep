@@ -155,8 +155,17 @@ def heartrate_to_atoms(filename):
     atoms.pop(0)
     return atoms
 
+def read_ignored_dates(file_path):
+    with open(file_path, 'r') as file:
+        ignored_dates = set(line.strip() for line in file)
+    return ignored_dates
+
+
 def full_detect():
-    watch_atoms=heartrate_to_atoms("results/05.csv")+heartrate_to_atoms("results/06.csv")
+    ignore_these=read_ignored_dates("ignoredates.txt")
+    initial_atoms=heartrate_to_atoms("results/05.csv")+heartrate_to_atoms("results/06.csv")
+    watch_atoms = [atom for atom in initial_atoms if atom.date not in ignore_these]
+
     print("All atoms created") 
     sleep_sessions=make_sleep_file(watch_atoms)
     for session in sleep_sessions:
