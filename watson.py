@@ -3,6 +3,7 @@ import math
 import datetime
 import statistics
 import warnings
+import glob
 import calendar_helper_functions as icalhelper
 import datetime
 from session import Session
@@ -163,7 +164,15 @@ def read_ignored_dates(file_path):
 
 def full_detect():
     ignore_these=read_ignored_dates("ignoredates.txt")
-    initial_atoms=heartrate_to_atoms("results/05.csv")+heartrate_to_atoms("results/06.csv")
+    # Get all CSV files in the results directory
+    csv_files = sorted(glob.glob("results/*.csv"))
+
+    initial_atoms = []
+    for file in csv_files:
+        print(file)
+        initial_atoms += heartrate_to_atoms(file)
+
+    #initial_atoms=heartrate_to_atoms("results/04.csv")+heartrate_to_atoms("results/05.csv")+heartrate_to_atoms("results/06.csv")+heartrate_to_atoms("results/07.csv")+heartrate_to_atoms("results/08.csv")+heartrate_to_atoms("results/09.csv")
     watch_atoms = [atom for atom in initial_atoms if atom.date not in ignore_these]
 
     print("All atoms created") 
